@@ -2,18 +2,30 @@
   "name": "Shift Host Node",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
   "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/devcontainers/features/node:1": { "version": "20" }
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
   },
   "customizations": {
     "codespaces": {
-      "openPorts": ["4000", "3001-3010"]
+      "openPorts": [
+        "4000",
+        "3001-3010"
+      ]
     }
   },
   "portsAttributes": {
-    "4000": { "label": "Shift Agent", "visibility": "public" },
-    "3001-3010": { "label": "User Payload", "visibility": "public" }
+    "4000": {
+      "label": "Shift Agent",
+      "visibility": "public"
+    },
+    "3001-3010": {
+      "label": "User Payload",
+      "visibility": "public"
+    }
   },
   "postCreateCommand": "until curl -fsSL \"$GATEWAY_URL/api/internal/download-agent\" -o agent.js; do echo 'Waiting for Gateway...'; sleep 5; done",
-  "postStartCommand": "bash -c 'set -x; cd /workspaces/dlxs-agent || exit 1; echo \"Starting agent at $(date)\"; while ! docker info > /dev/null 2>&1; do sleep 2; done; while true; do node ./agent.js >> /tmp/agent.log 2>&1; echo \"Agent exited at $(date). Restarting...\"; sleep 5; done &'"
+  "postStartCommand": "bash -c '\\\n    set -euo pipefail; \\\n    cd /workspaces/dlxs-agent || { echo \"Workspace not found\"; exit 1; }; \\\n    : > /tmp/agent.log; \\\n    echo \"[agent] starting at $(date)\" | tee -a /tmp/agent.log; \\\n    test -f agent.js || { echo \"[agent] agent.js missing\" | tee -a /tmp/agent.log; exit 1; }; \\\n    node -c agent.js || { echo \"[agent] agent.js syntax error\" | tee -a /tmp/agent.log; exit 1; }; \\\n    echo \"[agent] waiting for docker\" | tee -a /tmp/agent.log; \\\n    until docker info >/dev/null 2>&1; do sleep 2; done; \\\n    echo \"[agent] docker ready\" | tee -a /tmp/agent.log; \\\n    while true; do \\\n      echo \"[agent] launching agent.js at $(date)\" | tee -a /tmp/agent.log; \\\n      node agent.js >> /tmp/agent.log 2>&1 || true; \\\n      echo \"[agent] agent exited, restarting in 5s\" | tee -a /tmp/agent.log; \\\n      sleep 5; \\\n    done &'"
 }
