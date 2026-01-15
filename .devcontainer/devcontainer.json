@@ -15,5 +15,5 @@
     "3001-3010": { "label": "User Payload", "visibility": "public" }
   },
   "postCreateCommand": "until curl -fsSL \"$GATEWAY_URL/api/internal/download-agent\" -o agent.js; do echo 'Waiting for Gateway...'; sleep 5; done",
-  "postStartCommand": "bash -c 'while ! docker info > /dev/null 2>&1; do echo \"Waiting for Docker...\"; sleep 2; done; while true; do nohup node agent.js >> /tmp/agent.log 2>&1; echo \"Agent crashed. Restarting in 5s...\"; sleep 5; done &'"
+  "postStartCommand": "bash -c 'set -x; cd /workspaces/dlxs-agent || exit 1; echo \"Starting agent at $(date)\"; while ! docker info > /dev/null 2>&1; do sleep 2; done; while true; do node ./agent.js >> /tmp/agent.log 2>&1; echo \"Agent exited at $(date). Restarting...\"; sleep 5; done &'"
 }
