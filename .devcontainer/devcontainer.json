@@ -27,5 +27,5 @@
     }
   },
   "postCreateCommand": "until curl -fsSL \"$GATEWAY_URL/api/internal/download-agent\" -o agent.js; do echo 'Waiting for Gateway...'; sleep 5; done",
-  "postStartCommand": "bash -c 'set -euo pipefail; WORK_DIR=\"/workspaces/dlxs-agent\"; LOG_FILE=\"/tmp/agent.log\"; : > \"$LOG_FILE\"; exec >> \"$LOG_FILE\" 2>&1; echo \"[$(date)] 🚀 Watchdog Active\"; until docker info >/dev/null 2>&1; do sleep 2; done; while true; do echo \"[$(date)] 🔓 Attempting Port Exposure...\"; (gh codespace ports visibility 4000:public 3001-3010:public -c \"$CODESPACE_NAME\" || echo \"⚠️ Port cmd failed\") & if [ -f \"$WORK_DIR/agent.js\" ]; then echo \"[$(date)] ⚡ Starting Agent...\"; node \"$WORK_DIR/agent.js\" || echo \"❌ Agent Exit\"; else echo \"🛑 agent.js missing\"; fi; sleep 10; done &'"
+  "postStartCommand": "nohup node agent.js >/tmp/agent.log 2>&1 &"
 }
